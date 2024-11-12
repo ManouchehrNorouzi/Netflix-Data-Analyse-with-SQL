@@ -53,7 +53,7 @@ FROM(
 		RANK() OVER(PARTITION BY type ORDER BY COUNT(rating) DESC) AS ranking
 	FROM netflix
 	GROUP BY rating, type
-) AS t1
+) AS new_table
 WHERE ranking= 1;
 ```
 Objective: Identify the most frequently occurring rating for each type of content.
@@ -62,7 +62,7 @@ Objective: Identify the most frequently occurring rating for each type of conten
 ```sql
 SELECT * 
 FROM netflix
-WHERE release_year = 2020;
+WHERE release_year= 2020;
 ```
 Objective: Retrieve all movies released in a specific year.
 
@@ -70,7 +70,7 @@ Objective: Retrieve all movies released in a specific year.
 ```sql
 SELECT
 	UNNEST(STRING_TO_ARRAY(country, ',')) AS new_country_list,
-	COUNT(*) as total_COUNT
+	COUNT(*) AS total_COUNT
 FROM netflix
 GROUP BY 1
 ORDER BY 2 DESC
@@ -129,11 +129,18 @@ Objective: Count the number of content items in each genre.
 
 ```sql
 SELECT
-	EXTRACT(YEAR FROM TO_DATE (date_added, 'Month DD, yyyy')) AS Year,
-	COUNT(*),
-	ROUND(COUNT(*)::NUMERIC/(SELECT COUNT(*) FROM netflix WHERE country LIKE '%German%')::NUMERIC * 100, 3) AS average_count
+    EXTRACT(YEAR FROM TO_DATE(date_added, 'Month DD, yyyy')) AS Year,
+    COUNT(*) AS count,
+    ROUND(
+        COUNT(*)::NUMERIC / (
+            SELECT COUNT(*)
+            FROM netflix
+            WHERE country LIKE '%German%'
+        )::NUMERIC * 100, 3
+    ) AS average_count
 FROM netflix
-WHERE country LIKE '%German%' AND date_added IS NOT NULL
+WHERE country LIKE '%German%' 
+    AND date_added IS NOT NULL
 GROUP BY 1
 ORDER BY 1 DESC
 LIMIT 5;
